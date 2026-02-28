@@ -33,6 +33,18 @@ public class ZxyShopStoreModel {
         return toVo(store);
     }
 
+    public ZxyShopStoreVo detailById(Long id) {
+        ZxyShopStoreEntity store = shopStoreRepository.getByIdValid(id);
+        if (store == null) {
+            return null;
+        }
+        return toVo(store);
+    }
+
+    public List<ZxyShopStoreVo> listAll() {
+        return shopStoreRepository.listAll().stream().map(this::toVo).collect(Collectors.toList());
+    }
+
     public boolean create(Long shopId, ZxyShopStoreSaveDto dto) {
         if (shopStoreRepository.getByShopId(shopId) != null) {
             return false;

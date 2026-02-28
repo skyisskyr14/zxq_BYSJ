@@ -220,6 +220,29 @@ public class ZxyShopController {
         return ResponseResult.fail("门店配置不存在或删除失败");
     }
 
+
+
+    @GetMapping("/store/public/list")
+    @UserLog(action = "用户端查询门店列表", module = "shop")
+    @Operation(summary = "用户端查询门店列表")
+    public ResponseResult<?> storePublicList() {
+        return ResponseResult.success(shopStoreModel.listAll());
+    }
+
+    @GetMapping("/store/public/detail/{id}")
+    @UserLog(action = "用户端查询门店详情", module = "shop")
+    @Operation(summary = "用户端查询门店详情")
+    public ResponseResult<?> storePublicDetail(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            return ResponseResult.fail("门店ID错误");
+        }
+        Object detail = shopStoreModel.detailById(id);
+        if (detail == null) {
+            return ResponseResult.fail("门店不存在");
+        }
+        return ResponseResult.success(detail);
+    }
+
     @PostMapping(value = "/store/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @UserLog(action = "商户上传门店图片", module = "shop")
     @Operation(summary = "商户上传门店图片")
