@@ -33,6 +33,7 @@ public class TokenInterceptor implements HandlerInterceptor {
                             uri.startsWith("/api/uploads/pay/")||
                     uri.startsWith("/api/uploads/user/avatar/") ||
                     uri.startsWith("/api/uploads/shop/avatar/") ||
+                    uri.startsWith("/api/uploads/shop/store/") ||
                             uri.startsWith("/api/fd/user/register")
             ) {
                 return true;

@@ -45,6 +45,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private String baseDir3;
     @Value("${app.shop.avatar.base-dir}")
     private String baseDir4;
+    @Value("${app.shop.store-image.base-dir}")
+    private String baseDir5;
 
     @PostConstruct
     public void debugStaticDirs() {
@@ -55,6 +57,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         System.out.println("pay.location2   = " + Paths.get(baseDir2).toUri());
         System.out.println("user.avatarDir  = " + baseDir3);
         System.out.println("shop.avatarDir  = " + baseDir4);
+        System.out.println("shop.storeDir   = " + baseDir5);
     }
 
     @Override
@@ -69,6 +72,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/user/avatar/**").addResourceLocations(location3);
         String location4 = toDirLocation(baseDir4);
         registry.addResourceHandler("/uploads/shop/avatar/**").addResourceLocations(location4);
+        String location5 = toDirLocation(baseDir5);
+        registry.addResourceHandler("/uploads/shop/store/**").addResourceLocations(location5);
     }
 
     private String toDirLocation(String dir) {
