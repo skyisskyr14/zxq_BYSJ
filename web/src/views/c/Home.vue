@@ -1,6 +1,16 @@
 ﻿<template>
   <div>
     <page-header title="用户概览" desc="快速查看寄养进度与常用入口" />
+    <div class="card mt-16 user-panel">
+      <div class="title">我的基础信息</div>
+      <div class="user-main">
+        <el-avatar :size="54" :src="user.avatar" icon="el-icon-user-solid" />
+        <div>
+          <div class="meta-item">昵称：{{ user.nickname || user.name || '未设置' }}</div>
+          <div class="meta-item">手机号：{{ user.phone || '未绑定' }}</div>
+        </div>
+      </div>
+    </div>
     <div class="grid mt-16">
       <el-card class="stat">
         <div class="label">门店数量</div>
@@ -50,6 +60,9 @@ export default {
   computed: {
     boardingCount() {
       return this.orders.filter(o => o.status === 'boarding').length
+    },
+    user() {
+      return this.$store.getters['auth/userInfo'] || {}
     }
   },
   created() {
@@ -61,6 +74,23 @@ export default {
 </script>
 
 <style scoped>
+.user-panel .title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.user-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-item {
+  color: #4b5563;
+  line-height: 1.8;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -104,4 +134,3 @@ export default {
   font-weight: 600;
 }
 </style>
-
