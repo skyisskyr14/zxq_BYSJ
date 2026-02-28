@@ -22,6 +22,7 @@ export const menus = {
     { title: '寄养动态', icon: 'el-icon-camera', path: '/s/boarding/list' },
     { title: '退房处理', icon: 'el-icon-s-release', path: '/s/checkout' },
     { title: '门店配置', icon: 'el-icon-office-building', path: '/s/store/profile' },
+    { title: '商家信息', icon: 'el-icon-user-solid', path: '/s/me/profile' },
     { title: '笼位管理', icon: 'el-icon-menu', path: '/s/cage/list' },
     { title: '房型管理', icon: 'el-icon-s-home', path: '/s/room/list' },
     { title: '服务管理', icon: 'el-icon-star-on', path: '/s/service/list' }

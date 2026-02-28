@@ -20,7 +20,7 @@
       <el-table-column prop="price" label="价格" width="120">
         <template slot-scope="scope">￥{{ scope.row.price }}</template>
       </el-table-column>
-      <el-table-column prop="desc" label="说明" />
+      <el-table-column prop="description" label="说明" />
       <el-table-column label="操作" width="160">
         <template slot-scope="scope">
           <el-button type="text" @click="openDialog(scope.row)">编辑</el-button>
@@ -37,15 +37,15 @@
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
-          <el-input-number v-model="form.price" :min="1" />
+          <el-input-number v-model="form.price" :min="0" />
         </el-form-item>
-        <el-form-item label="说明" prop="desc">
-          <el-input v-model="form.desc" />
+        <el-form-item label="说明">
+          <el-input v-model="form.description" />
         </el-form-item>
       </el-form>
       <div slot="footer">
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
       </div>
     </el-dialog>
   </div>
@@ -56,7 +56,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import QueryBar from '@/components/common/QueryBar.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
-import { list, create, update, remove } from '@/mock'
+import { createServiceRequest, deleteServiceRequest, listServiceRequest, updateServiceRequest } from '@/api/request/service'
 
 export default {
   name: 'ServiceList',
@@ -64,12 +64,13 @@ export default {
   data() {
     return {
       loading: false,
+      saving: false,
       services: [],
       query: { keyword: '', max: 200 },
       page: 1,
       pageSize: 8,
       dialogVisible: false,
-      form: { id: null, name: '', price: 20, desc: '' },
+      form: { id: null, name: '', price: 20, description: '' },
       rules: {
         name: [{ required: true, message: '请输入名称', trigger: 'blur' }]
       }
@@ -78,8 +79,8 @@ export default {
   computed: {
     filtered() {
       return this.services.filter(s => {
-        const matchKeyword = !this.query.keyword || s.name.includes(this.query.keyword)
-        const matchPrice = s.price <= Number(this.query.max || 0)
+        const matchKeyword = !this.query.keyword || (s.name || '').includes(this.query.keyword)
+        const matchPrice = Number(s.price || 0) <= Number(this.query.max || 0)
         return matchKeyword && matchPrice
       })
     },
@@ -95,40 +96,57 @@ export default {
     this.refresh()
   },
   methods: {
-    refresh() {
+    async refresh() {
       this.loading = true
-      setTimeout(() => {
-        this.services = list('services')
+      try {
+        const res = await listServiceRequest()
+        if (res.code !== 200) throw new Error(res.message || '查询失败')
+        this.services = Array.isArray(res.data) ? res.data : []
+      } catch (e) {
+        this.$message.error(e.message || '查询失败')
+      } finally {
         this.loading = false
-      }, 200)
+      }
     },
     reset() {
       this.query = { keyword: '', max: 200 }
       this.page = 1
     },
     openDialog(row) {
-      this.form = row ? { ...row } : { id: null, name: '', price: 20, desc: '' }
+      this.form = row ? { ...row } : { id: null, name: '', price: 20, description: '' }
       this.dialogVisible = true
     },
     submit() {
-      this.$refs.form.validate(valid => {
+      this.$refs.form.validate(async valid => {
         if (!valid) return
-        if (this.form.id) {
-          update('services', this.form.id, this.form)
-        } else {
-          create('services', { ...this.form, storeId: 1 })
+        this.saving = true
+        try {
+          const api = this.form.id ? updateServiceRequest : createServiceRequest
+          const payload = { ...this.form }
+          if (!this.form.id) delete payload.id
+          const res = await api(payload)
+          if (res.code !== 200) throw new Error(res.message || '保存失败')
+          this.$message.success(this.form.id ? '修改成功' : '新增成功')
+          this.dialogVisible = false
+          await this.refresh()
+        } catch (e) {
+          this.$message.error(e.message || '保存失败')
+        } finally {
+          this.saving = false
         }
-        this.dialogVisible = false
-        this.refresh()
       })
     },
     removeRow(row) {
-      this.$confirm('确认删除该服务？', '提示').then(() => {
-        remove('services', row.id)
+      this.$confirm('确认删除该服务？', '提示').then(async () => {
+        const res = await deleteServiceRequest(row.id)
+        if (res.code !== 200) {
+          this.$message.error(res.message || '删除失败')
+          return
+        }
+        this.$message.success('删除成功')
         this.refresh()
       })
     }
   }
 }
 </script>
-

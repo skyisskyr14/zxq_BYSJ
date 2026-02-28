@@ -24,6 +24,7 @@
         <module>system/ws</module>
         <module>project/user</module>
         <module>project/shop</module>
+        <module>project/pet</module>
         <module>dev-admin</module>
 
     </modules>
