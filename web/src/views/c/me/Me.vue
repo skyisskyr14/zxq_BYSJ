@@ -3,14 +3,14 @@
     <page-header title="个人中心" desc="管理个人信息与常用入口" />
     <div class="card mt-16">
       <div class="profile">
-        <div class="avatar">{{ user.name ? user.name.slice(0, 1) : 'U' }}</div>
+        <el-avatar class="avatar" :size="64" :src="user.avatar" icon="el-icon-user-solid">{{ displayName ? displayName.slice(0, 1) : 'U' }}</el-avatar>
         <div>
-          <div class="name">{{ user.name || '用户' }}</div>
+          <div class="name">{{ displayName || '用户' }}</div>
           <div class="text-muted">{{ user.phone }}</div>
         </div>
       </div>
       <div class="mt-16">
-        <el-button type="primary" @click="$router.push('/c/me/profile')">编辑资料</el-button>
+        <el-button type="primary" @click="$router.push('/c/me/profile')">个人信息</el-button>
         <el-button @click="$router.push('/c/order/list')">我的订单</el-button>
       </div>
     </div>
@@ -26,7 +26,13 @@ export default {
   computed: {
     user() {
       return this.$store.getters['auth/userInfo'] || {}
+    },
+    displayName() {
+      return this.user.nickname || this.user.name || this.user.username || ''
     }
+  },
+  created() {
+    this.$store.dispatch('auth/fetchUserBaseInfo').catch(() => {})
   }
 }
 </script>
@@ -38,13 +44,8 @@ export default {
   gap: 12px;
 }
 .avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
   background: #e8efff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: #2563eb;
   font-size: 24px;
   font-weight: 600;
 }

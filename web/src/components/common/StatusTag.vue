@@ -18,7 +18,9 @@ const STATUS_MAP = {
   approved: { label: '已通过', type: 'success' },
   published: { label: '已发布', type: 'success' },
   active: { label: '启用', type: 'success' },
-  disabled: { label: '停用', type: 'info' }
+  disabled: { label: '停用', type: 'info' },
+  free: { label: '空闲', type: 'success' },
+  occupied: { label: '占用', type: 'warning' }
 }
 
 export default {

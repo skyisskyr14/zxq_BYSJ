@@ -56,12 +56,18 @@
           </el-select>
         </el-form-item>
         <el-form-item label="价格" prop="price">
-          <el-input-number v-model="form.price" :min="10" />
+          <el-input-number v-model="form.price" :min="0" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="form.status">
+            <el-option label="空闲" value="free" />
+            <el-option label="占用" value="occupied" />
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer">
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
       </div>
     </el-dialog>
   </div>
@@ -73,7 +79,7 @@ import QueryBar from '@/components/common/QueryBar.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import { list, create, update, remove } from '@/mock'
+import { createCageRequest, deleteCageRequest, listCageRequest, updateCageRequest } from '@/api/request/cage'
 
 export default {
   name: 'CageList',
@@ -81,15 +87,17 @@ export default {
   data() {
     return {
       loading: false,
+      saving: false,
       cages: [],
       query: { status: '', size: '' },
       page: 1,
       pageSize: 8,
       dialogVisible: false,
-      form: { id: null, code: '', size: '', price: 60 },
+      form: { id: null, code: '', size: '', price: 60, status: 'free' },
       rules: {
         code: [{ required: true, message: '请输入编号', trigger: 'blur' }],
-        size: [{ required: true, message: '请选择规格', trigger: 'change' }]
+        size: [{ required: true, message: '请选择规格', trigger: 'change' }],
+        status: [{ required: true, message: '请选择状态', trigger: 'change' }]
       }
     }
   },
@@ -113,40 +121,57 @@ export default {
     this.refresh()
   },
   methods: {
-    refresh() {
+    async refresh() {
       this.loading = true
-      setTimeout(() => {
-        this.cages = list('cages')
+      try {
+        const res = await listCageRequest()
+        if (res.code !== 200) throw new Error(res.message || '查询失败')
+        this.cages = Array.isArray(res.data) ? res.data : []
+      } catch (e) {
+        this.$message.error(e.message || '查询失败')
+      } finally {
         this.loading = false
-      }, 200)
+      }
     },
     reset() {
       this.query = { status: '', size: '' }
       this.page = 1
     },
     openDialog(row) {
-      this.form = row ? { ...row } : { id: null, code: '', size: '', price: 60 }
+      this.form = row ? { ...row } : { id: null, code: '', size: '', price: 60, status: 'free' }
       this.dialogVisible = true
     },
     submit() {
-      this.$refs.form.validate(valid => {
+      this.$refs.form.validate(async valid => {
         if (!valid) return
-        if (this.form.id) {
-          update('cages', this.form.id, this.form)
-        } else {
-          create('cages', { ...this.form, status: 'free', storeId: 1 })
+        this.saving = true
+        try {
+          const api = this.form.id ? updateCageRequest : createCageRequest
+          const payload = { ...this.form }
+          if (!this.form.id) delete payload.id
+          const res = await api(payload)
+          if (res.code !== 200) throw new Error(res.message || '保存失败')
+          this.$message.success(this.form.id ? '修改成功' : '新增成功')
+          this.dialogVisible = false
+          await this.refresh()
+        } catch (e) {
+          this.$message.error(e.message || '保存失败')
+        } finally {
+          this.saving = false
         }
-        this.dialogVisible = false
-        this.refresh()
       })
     },
     removeRow(row) {
-      this.$confirm('确认删除该笼位？', '提示').then(() => {
-        remove('cages', row.id)
+      this.$confirm('确认删除该笼位？', '提示').then(async () => {
+        const res = await deleteCageRequest(row.id)
+        if (res.code !== 200) {
+          this.$message.error(res.message || '删除失败')
+          return
+        }
+        this.$message.success('删除成功')
         this.refresh()
       })
     }
   }
 }
 </script>
-

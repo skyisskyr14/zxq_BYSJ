@@ -30,14 +30,14 @@
       </div>
       <div v-else class="cards">
         <div v-for="store in paged" :key="store.id" class="store">
-          <img :src="store.cover" alt="cover" />
+          <img :src="storeFirstImage(store)" alt="cover" />
           <div class="info">
             <div class="name">{{ store.name }}</div>
-            <div class="text-muted">{{ store.city }} · 评分 {{ store.rating }}</div>
-            <div class="text-muted">{{ store.address }}</div>
+            <div class="text-muted">{{ store.city || '未设置城市' }} · 评分 {{ Number(store.score || 0).toFixed(1) }}</div>
+            <div class="text-muted">{{ store.address || '未设置地址' }}</div>
           </div>
           <div class="actions">
-            <el-button size="mini" @click="$router.push(`/c/store/${store.id}`)">详情</el-button>
+            <el-button size="mini" @click="openDetail(store.id)">详情</el-button>
             <el-button size="mini" type="primary" @click="goBooking(store.id)">去预约</el-button>
           </div>
         </div>
@@ -46,6 +46,29 @@
     </div>
 
     <pagination :page="page" :page-size="pageSize" :total="filtered.length" @change="page = $event" @size="pageSize = $event" />
+
+    <el-dialog :visible.sync="detailVisible" width="760px" title="门店详情" destroy-on-close>
+      <template v-if="detailStore">
+        <el-carousel v-if="detailImages.length" height="280px" indicator-position="outside">
+          <el-carousel-item v-for="(img, idx) in detailImages" :key="img + idx">
+            <img :src="img" class="detail-img" alt="门店图片" />
+          </el-carousel-item>
+        </el-carousel>
+        <div v-else class="no-img">暂无门店图片</div>
+
+        <div class="detail-info mt-16">
+          <div class="name">{{ detailStore.name }}</div>
+          <div class="text-muted">{{ detailStore.city || '未设置城市' }} · 评分 {{ Number(detailStore.score || 0).toFixed(1) }}</div>
+          <div class="text-muted">地址：{{ detailStore.address || '未设置地址' }}</div>
+          <div class="text-muted">电话：{{ detailStore.phone || '未设置电话' }}</div>
+          <div class="desc">{{ detailStore.intro || '暂无门店介绍' }}</div>
+        </div>
+      </template>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button type="primary" :disabled="!detailStore" @click="goBooking(detailStore.id)">去预约</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -54,7 +77,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import QueryBar from '@/components/common/QueryBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
-import { list } from '@/mock'
+import { getStoreDetailRequest, getStoreListRequest } from '@/api/request/store'
 
 export default {
   name: 'StoreList',
@@ -62,7 +85,10 @@ export default {
   data() {
     return {
       loading: false,
+      detailLoading: false,
+      detailVisible: false,
       stores: [],
+      detailStore: null,
       query: { keyword: '', city: '', rating: 0 },
       page: 1,
       pageSize: 6
@@ -70,29 +96,61 @@ export default {
   },
   computed: {
     cities() {
-      return [...new Set(this.stores.map(s => s.city))]
+      return [...new Set(this.stores.map(s => s.city).filter(Boolean))]
     },
     filtered() {
       return this.stores.filter(store => {
-        const matchKeyword = !this.query.keyword || store.name.includes(this.query.keyword) || store.address.includes(this.query.keyword)
+        const matchKeyword =
+          !this.query.keyword ||
+          (store.name || '').includes(this.query.keyword) ||
+          (store.address || '').includes(this.query.keyword)
         const matchCity = !this.query.city || store.city === this.query.city
-        const matchRating = store.rating >= Number(this.query.rating || 0)
+        const matchRating = Number(store.score || 0) >= Number(this.query.rating || 0)
         return matchKeyword && matchCity && matchRating
       })
     },
     paged() {
       const start = (this.page - 1) * this.pageSize
       return this.filtered.slice(start, start + this.pageSize)
+    },
+    detailImages() {
+      return this.detailStore?.images || []
     }
   },
   created() {
-    this.loading = true
-    setTimeout(() => {
-      this.stores = list('stores')
-      this.loading = false
-    }, 300)
+    this.fetchStores()
   },
   methods: {
+    async fetchStores() {
+      this.loading = true
+      try {
+        const res = await getStoreListRequest()
+        if (res.code !== 200) throw new Error(res.message || '查询门店失败')
+        this.stores = Array.isArray(res.data) ? res.data : []
+      } catch (e) {
+        this.$message.error(e.message || '查询门店失败')
+      } finally {
+        this.loading = false
+      }
+    },
+    storeFirstImage(store) {
+      return store?.images?.[0] || 'https://via.placeholder.com/640x360?text=Store'
+    },
+    async openDetail(id) {
+      this.detailVisible = true
+      this.detailStore = null
+      this.detailLoading = true
+      try {
+        const res = await getStoreDetailRequest(id)
+        if (res.code !== 200 || !res.data) throw new Error(res.message || '查询门店详情失败')
+        this.detailStore = res.data
+      } catch (e) {
+        this.$message.error(e.message || '查询门店详情失败')
+        this.detailVisible = false
+      } finally {
+        this.detailLoading = false
+      }
+    },
     handleSearch() {
       this.page = 1
     },
@@ -101,6 +159,8 @@ export default {
       this.page = 1
     },
     goBooking(id) {
+      if (!id) return
+      this.detailVisible = false
       this.$router.push({ path: '/c/booking/create', query: { storeId: id } })
     }
   }
@@ -138,5 +198,25 @@ export default {
   display: flex;
   gap: 8px;
 }
-</style>
 
+.detail-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.no-img {
+  height: 160px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+}
+
+.desc {
+  margin-top: 8px;
+  color: #606266;
+}
+</style>

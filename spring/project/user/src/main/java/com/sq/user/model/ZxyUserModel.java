@@ -18,6 +18,7 @@ import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -106,16 +107,30 @@ public class ZxyUserModel {
         return map;
     }
 
-    public boolean update(ZxyUserEntity zxyUser,String nickname,String avatar,int gender) {
-        zxyUser.setAvatar(avatar);
-        zxyUser.setGender(gender);
-        zxyUser.setNickname(nickname);
-        zxyUser.setUpdateTime(LocalDateTime.now());
-        if(zxyUserRepository.updateById(zxyUser) == 0){
-            return false;
-        }else{
-            return true;
+    public boolean updateBaseInfo(ZxyUserEntity zxyUser, String nickname, String avatar, Integer gender) {
+        boolean changed = false;
+
+        if (StringUtils.hasText(nickname) && !nickname.equals(zxyUser.getNickname())) {
+            zxyUser.setNickname(nickname);
+            changed = true;
         }
+
+        if (StringUtils.hasText(avatar) && !avatar.equals(zxyUser.getAvatar())) {
+            zxyUser.setAvatar(avatar);
+            changed = true;
+        }
+
+        if (gender != null && gender >= 0 && !gender.equals(zxyUser.getGender())) {
+            zxyUser.setGender(gender);
+            changed = true;
+        }
+
+        if (!changed) {
+            return false;
+        }
+
+        zxyUser.setUpdateTime(LocalDateTime.now());
+        return zxyUserRepository.updateById(zxyUser) > 0;
     }
 
     public void delete(Long id) {

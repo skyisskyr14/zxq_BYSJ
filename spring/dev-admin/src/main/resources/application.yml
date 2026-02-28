@@ -60,6 +60,17 @@ app:
   pay:
     base-dir: "${user.dir}/data/pay"
     public-host: "http://localhost:10438/api/uploads/pay"
+  user:
+    avatar:
+      base-dir: "${user.dir}/data/user/avatar"
+      public-host: "http://localhost:10438/api/uploads/user/avatar"
+  shop:
+    avatar:
+      base-dir: "${user.dir}/data/shop/avatar"
+      public-host: "http://localhost:10438/api/uploads/shop/avatar"
+    store-image:
+      base-dir: "${user.dir}/data/shop/store"
+      public-host: "http://localhost:10438/api/uploads/shop/store"
 
 
 security:
