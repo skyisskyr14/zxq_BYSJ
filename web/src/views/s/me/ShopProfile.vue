@@ -12,8 +12,19 @@
         <el-form-item label="商家名称" prop="realname">
           <el-input v-model.trim="form.realname" placeholder="请输入商家名称" />
         </el-form-item>
-        <el-form-item label="头像URL" prop="avatar">
-          <el-input v-model.trim="form.avatar" placeholder="请输入头像地址（可选）" />
+        <el-form-item label="头像" prop="avatar">
+          <div class="avatar-upload-row">
+            <el-upload
+              :show-file-list="false"
+              :http-request="handleAvatarUpload"
+              :before-upload="beforeAvatarUpload"
+              accept="image/*"
+            >
+              <el-button size="small" type="primary" :loading="uploadingAvatar">上传头像</el-button>
+            </el-upload>
+            <span class="avatar-tip">支持 jpg/png/webp，上传后会自动填充头像地址</span>
+          </div>
+          <el-input v-model.trim="form.avatar" placeholder="也可手动输入头像地址（可选）" class="mt-8" />
         </el-form-item>
         <el-form-item label="性别">
           <el-radio-group v-model="form.gender">
@@ -37,7 +48,13 @@
 
 <script>
 import PageHeader from '@/components/common/PageHeader.vue'
-import { createShopBaseInfoRequest, deleteShopBaseInfoRequest, getShopBaseInfoRequest, updateShopBaseInfoRequest } from '@/api/request/shop'
+import {
+  createShopBaseInfoRequest,
+  deleteShopBaseInfoRequest,
+  getShopBaseInfoRequest,
+  updateShopBaseInfoRequest,
+  uploadShopAvatarRequest
+} from '@/api/request/shop'
 
 export default {
   name: 'ShopProfile',
@@ -47,6 +64,7 @@ export default {
       loading: false,
       saving: false,
       deleting: false,
+      uploadingAvatar: false,
       hasInfo: false,
       form: {
         realname: '',
@@ -89,6 +107,31 @@ export default {
       }
       this.$store.dispatch('auth/fetchShopBaseInfo').catch(() => {})
     },
+    beforeAvatarUpload(file) {
+      const isImage = file.type.startsWith('image/')
+      if (!isImage) {
+        this.$message.error('只能上传图片文件')
+      }
+      return isImage
+    },
+    async handleAvatarUpload(option) {
+      this.uploadingAvatar = true
+      try {
+        const res = await uploadShopAvatarRequest(option.file)
+        if (res.code !== 200 || !res.data?.avatar) {
+          throw new Error(res.message || '头像上传失败')
+        }
+        this.form.avatar = res.data.avatar
+        this.$message.success('头像上传成功')
+        await this.$store.dispatch('auth/fetchShopBaseInfo').catch(() => {})
+        option.onSuccess && option.onSuccess(res)
+      } catch (e) {
+        this.$message.error(e.message || '头像上传失败')
+        option.onError && option.onError(e)
+      } finally {
+        this.uploadingAvatar = false
+      }
+    },
     save() {
       this.$refs.formRef.validate(async valid => {
         if (!valid) return
@@ -130,5 +173,20 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-tip {
+  color: #909399;
+  font-size: 12px;
+}
+
+.mt-8 {
+  margin-top: 8px;
 }
 </style>

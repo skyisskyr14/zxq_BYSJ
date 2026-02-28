@@ -64,6 +64,10 @@ app:
     avatar:
       base-dir: "${user.dir}/data/user/avatar"
       public-host: "http://localhost:10438/api/uploads/user/avatar"
+  shop:
+    avatar:
+      base-dir: "${user.dir}/data/shop/avatar"
+      public-host: "http://localhost:10438/api/uploads/shop/avatar"
 
 
 security:
