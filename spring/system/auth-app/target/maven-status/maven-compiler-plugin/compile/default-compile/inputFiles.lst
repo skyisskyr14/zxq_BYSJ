@@ -1,0 +1,12 @@
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/captcha/CaptchaController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/admincore/AdminProjectController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/security/PermissionController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/usercore/UserCoreController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/admincore/AdminMeController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/admincore/AdminPermissionController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/admincore/AdminRoleController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/task/UserIpLogSyncTask.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/task/IpLogSyncTask.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/usercore/UserAuthController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/admincore/AuthAdminController.java
+/home/skyissky/skyissky/BYSJ/zxq/spring/system/auth-app/src/main/java/com/sq/system/authapp/controller/security/RolePermissionController.java

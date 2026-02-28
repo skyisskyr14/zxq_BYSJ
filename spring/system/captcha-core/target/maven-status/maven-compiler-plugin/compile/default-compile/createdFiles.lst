@@ -1,0 +1,7 @@
+com/sq/system/captcha/support/CaptchaDispatcher.class
+com/sq/system/captcha/impl/SliderCaptchaGenerator.class
+com/sq/system/captcha/util/SliderImageUtil$SliderResult.class
+com/sq/system/captcha/api/CaptchaGenerator.class
+com/sq/system/captcha/util/SliderImageUtil.class
+com/sq/system/captcha/model/CaptchaResponse.class
+com/sq/system/captcha/impl/ImageCaptchaGenerator.class

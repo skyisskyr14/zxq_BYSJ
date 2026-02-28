@@ -1,0 +1,14 @@
+com/sq/user/entity/ZxyUserAddressEntity.class
+com/sq/user/controller/ZxyUserController.class
+com/sq/user/entity/ZxyUserEntity.class
+com/sq/user/vo/ZxyUserBaseInfoVo.class
+com/sq/user/repository/ZxyUserRepository.class
+com/sq/user/model/ZxyUserProfileModel.class
+com/sq/user/repository/ZxyUserProfileRepository.class
+com/sq/user/repository/ZxyUserAddressRepository.class
+com/sq/user/dto/ZxyUserRegisterDto.class
+com/sq/user/model/ZxyUserAddressModel.class
+com/sq/user/controller/ZxyUserAddressController.class
+com/sq/user/model/ZxyUserModel.class
+com/sq/user/controller/ZxyUserProfileController.class
+com/sq/user/entity/ZxyUserProfileEntity.class

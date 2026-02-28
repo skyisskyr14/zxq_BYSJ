@@ -1,0 +1,14 @@
+com/sq/system/authapp/controller/security/RolePermissionController.class
+com/sq/system/authapp/controller/usercore/UserCoreController.class
+com/sq/system/authapp/controller/captcha/CaptchaController.class
+com/sq/system/authapp/controller/captcha/CaptchaController$1.class
+com/sq/system/authapp/controller/admincore/AdminRoleController.class
+com/sq/system/authapp/controller/usercore/UserAuthController.class
+com/sq/system/authapp/controller/admincore/AdminMeController$AdminProfile.class
+com/sq/system/authapp/controller/admincore/AdminProjectController.class
+com/sq/system/authapp/controller/admincore/AdminMeController.class
+com/sq/system/authapp/controller/admincore/AuthAdminController.class
+com/sq/system/authapp/task/UserIpLogSyncTask.class
+com/sq/system/authapp/controller/security/PermissionController.class
+com/sq/system/authapp/task/IpLogSyncTask.class
+com/sq/system/authapp/controller/admincore/AdminPermissionController.class
