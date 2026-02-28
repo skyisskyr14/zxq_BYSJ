@@ -6,8 +6,10 @@ import com.sq.shop.entity.ZxyShopEntity;
 import com.sq.shop.model.ZxyShopModel;
 import com.sq.shop.model.ZxyShopStoreModel;
 import com.sq.shop.model.ZxyShopCageModel;
+import com.sq.shop.model.ZxyShopServiceModel;
 import com.sq.shop.dto.ZxyShopStoreSaveDto;
 import com.sq.shop.dto.ZxyShopCageSaveDto;
+import com.sq.shop.dto.ZxyShopServiceSaveDto;
 import com.sq.shop.repository.ZxyShopRepository;
 import com.sq.system.common.annotation.UserLog;
 import com.sq.system.common.result.ResponseResult;
@@ -55,6 +57,9 @@ public class ZxyShopController {
 
     @Resource
     private ZxyShopCageModel shopCageModel;
+
+    @Resource
+    private ZxyShopServiceModel shopServiceModel;
     @Autowired
     private ZxyShopRepository zxyShopRepository;
 
@@ -292,6 +297,70 @@ public class ZxyShopController {
 
 
 
+    @GetMapping("/service/list")
+    @UserLog(action = "商户查询服务列表", module = "shop")
+    @Operation(summary = "商户查询服务列表")
+    public ResponseResult<?> serviceList() {
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        return ResponseResult.success(shopServiceModel.list(zxyShopEntity.getId()));
+    }
+
+    @PostMapping("/service/create")
+    @UserLog(action = "商户新增服务", module = "shop")
+    @Operation(summary = "商户新增服务")
+    public ResponseResult<?> serviceCreate(@RequestBody ZxyShopServiceSaveDto dto) {
+        String msg = validateServiceDto(dto, true);
+        if (msg != null) return ResponseResult.fail(msg);
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopServiceModel.create(zxyShopEntity.getId(), dto)) {
+            return ResponseResult.success("创建成功");
+        }
+        return ResponseResult.fail("创建失败");
+    }
+
+    @PostMapping("/service/update")
+    @UserLog(action = "商户修改服务", module = "shop")
+    @Operation(summary = "商户修改服务")
+    public ResponseResult<?> serviceUpdate(@RequestBody ZxyShopServiceSaveDto dto) {
+        String msg = validateServiceDto(dto, false);
+        if (msg != null) return ResponseResult.fail(msg);
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopServiceModel.update(zxyShopEntity.getId(), dto)) {
+            return ResponseResult.success("修改成功");
+        }
+        return ResponseResult.fail("服务不存在或无需修改");
+    }
+
+    @PostMapping("/service/delete")
+    @UserLog(action = "商户删除服务", module = "shop")
+    @Operation(summary = "商户删除服务")
+    public ResponseResult<?> serviceDelete(@RequestParam Long id) {
+        if (id == null || id <= 0) {
+            return ResponseResult.fail("服务ID错误");
+        }
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopServiceModel.delete(id, zxyShopEntity.getId())) {
+            return ResponseResult.success("删除成功");
+        }
+        return ResponseResult.fail("服务不存在或删除失败");
+    }
+
     @GetMapping("/store/public/list")
     @UserLog(action = "用户端查询门店列表", module = "shop")
     @Operation(summary = "用户端查询门店列表")
@@ -445,6 +514,19 @@ public class ZxyShopController {
         return null;
     }
 
+
+    private String validateServiceDto(ZxyShopServiceSaveDto dto, boolean forCreate) {
+        if (!forCreate && (dto.getId() == null || dto.getId() <= 0)) {
+            return "服务ID不能为空";
+        }
+        if (!StringUtils.hasText(dto.getName())) {
+            return "服务名称不能为空";
+        }
+        if (dto.getPrice() == null || dto.getPrice().doubleValue() < 0) {
+            return "服务价格不能小于0";
+        }
+        return null;
+    }
 
     private String validateStoreDto(ZxyShopStoreSaveDto dto, boolean requireName) {
         if (requireName && !StringUtils.hasText(dto.getName())) {
