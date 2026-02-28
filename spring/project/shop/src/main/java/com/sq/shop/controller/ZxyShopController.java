@@ -5,7 +5,9 @@ import com.sq.shop.dto.ZxyShopSaveDto;
 import com.sq.shop.entity.ZxyShopEntity;
 import com.sq.shop.model.ZxyShopModel;
 import com.sq.shop.model.ZxyShopStoreModel;
+import com.sq.shop.model.ZxyShopCageModel;
 import com.sq.shop.dto.ZxyShopStoreSaveDto;
+import com.sq.shop.dto.ZxyShopCageSaveDto;
 import com.sq.shop.repository.ZxyShopRepository;
 import com.sq.system.common.annotation.UserLog;
 import com.sq.system.common.result.ResponseResult;
@@ -50,6 +52,9 @@ public class ZxyShopController {
 
     @Resource
     private ZxyShopStoreModel shopStoreModel;
+
+    @Resource
+    private ZxyShopCageModel shopCageModel;
     @Autowired
     private ZxyShopRepository zxyShopRepository;
 
@@ -221,6 +226,71 @@ public class ZxyShopController {
     }
 
 
+    @GetMapping("/cage/list")
+    @UserLog(action = "商户查询笼位列表", module = "shop")
+    @Operation(summary = "商户查询笼位列表")
+    public ResponseResult<?> cageList() {
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        return ResponseResult.success(shopCageModel.list(zxyShopEntity.getId()));
+    }
+
+    @PostMapping("/cage/create")
+    @UserLog(action = "商户新增笼位", module = "shop")
+    @Operation(summary = "商户新增笼位")
+    public ResponseResult<?> cageCreate(@RequestBody ZxyShopCageSaveDto dto) {
+        String msg = validateCageDto(dto, true);
+        if (msg != null) return ResponseResult.fail(msg);
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopCageModel.create(zxyShopEntity.getId(), dto)) {
+            return ResponseResult.success("创建成功");
+        }
+        return ResponseResult.fail("笼位编号重复或创建失败");
+    }
+
+    @PostMapping("/cage/update")
+    @UserLog(action = "商户修改笼位", module = "shop")
+    @Operation(summary = "商户修改笼位")
+    public ResponseResult<?> cageUpdate(@RequestBody ZxyShopCageSaveDto dto) {
+        String msg = validateCageDto(dto, false);
+        if (msg != null) return ResponseResult.fail(msg);
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopCageModel.update(zxyShopEntity.getId(), dto)) {
+            return ResponseResult.success("修改成功");
+        }
+        return ResponseResult.fail("笼位不存在、编号重复或无需修改");
+    }
+
+    @PostMapping("/cage/delete")
+    @UserLog(action = "商户删除笼位", module = "shop")
+    @Operation(summary = "商户删除笼位")
+    public ResponseResult<?> cageDelete(@RequestParam Long id) {
+        if (id == null || id <= 0) {
+            return ResponseResult.fail("笼位ID错误");
+        }
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyShopEntity zxyShopEntity = zxyShopRepository.getShopBySysId(user.getId());
+        if (zxyShopEntity == null) {
+            return ResponseResult.fail("商家信息不存在");
+        }
+        if (shopCageModel.delete(id, zxyShopEntity.getId())) {
+            return ResponseResult.success("删除成功");
+        }
+        return ResponseResult.fail("笼位不存在或删除失败");
+    }
+
+
 
     @GetMapping("/store/public/list")
     @UserLog(action = "用户端查询门店列表", module = "shop")
@@ -352,6 +422,28 @@ public class ZxyShopController {
         return ResponseResult.success(shopModel.listShops());
     }
 
+
+    private String validateCageDto(ZxyShopCageSaveDto dto, boolean forCreate) {
+        if (!forCreate && (dto.getId() == null || dto.getId() <= 0)) {
+            return "笼位ID不能为空";
+        }
+        if (!StringUtils.hasText(dto.getCode())) {
+            return "笼位编号不能为空";
+        }
+        if (!StringUtils.hasText(dto.getSize())) {
+            return "笼位规格不能为空";
+        }
+        if (!("S".equals(dto.getSize()) || "M".equals(dto.getSize()) || "L".equals(dto.getSize()))) {
+            return "笼位规格仅支持 S/M/L";
+        }
+        if (dto.getPrice() == null || dto.getPrice().doubleValue() < 0) {
+            return "笼位价格不能小于0";
+        }
+        if (StringUtils.hasText(dto.getStatus()) && !(("free".equals(dto.getStatus())) || ("occupied".equals(dto.getStatus())))) {
+            return "笼位状态仅支持 free/occupied";
+        }
+        return null;
+    }
 
 
     private String validateStoreDto(ZxyShopStoreSaveDto dto, boolean requireName) {
