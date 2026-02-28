@@ -1,6 +1,7 @@
 package com.sq.shop.model;
 
 import com.sq.shop.dto.ZxyShopRegisterDto;
+import com.sq.shop.dto.ZxyShopSaveDto;
 import com.sq.shop.entity.ZxyShopEntity;
 import com.sq.shop.repository.ZxyShopRepository;
 import com.sq.shop.vo.ZxyBaseInfoShopVo;
@@ -15,10 +16,14 @@ import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -38,9 +43,6 @@ public class ZxyShopModel {
     public Map<String,Object> create(ZxyShopRegisterDto entity, Long projectId, String ip) {
 
         Map<String,Object> map = new HashMap<>();
-
-//        System.out.println("UserRepository loaded from: " +
-//                UserRepository.class.getProtectionDomain().getCodeSource().getLocation());
 
         boolean valid = captchaDispatcher.get(entity.getCaptchaType()).verify(entity.getUuid(), entity.getCaptcha());
         if (!valid) {
@@ -91,6 +93,7 @@ public class ZxyShopModel {
         zxyShopEntity.setRealname(entity.getNickname());
         zxyShopEntity.setCreateTime(LocalDateTime.now());
         zxyShopEntity.setUpdateTime(LocalDateTime.now());
+        zxyShopEntity.setIsDelete(0);
         if(zxyShopRepository.insert(zxyShopEntity) == 0){
             map.put("code",false);
             map.put("mes","用户插入错误,请重试");
@@ -102,15 +105,51 @@ public class ZxyShopModel {
         return map;
     }
 
-    public boolean update(ZxyShopEntity zxyShop,String avatar,int gender) {
-        zxyShop.setAvatar(avatar);
-        zxyShop.setGender(gender);
-        zxyShop.setUpdateTime(LocalDateTime.now());
-        if(zxyShopRepository.updateById(zxyShop) == 0){
+    public boolean createShopInfo(Long sysId, ZxyShopSaveDto dto) {
+        if (zxyShopRepository.getShopBySysId(sysId) != null) {
             return false;
-        }else{
-            return true;
         }
+        ZxyShopEntity shop = new ZxyShopEntity();
+        shop.setSysId(sysId);
+        shop.setRealname(dto.getRealname());
+        shop.setAvatar(dto.getAvatar());
+        shop.setGender(dto.getGender() == null ? 0 : dto.getGender());
+        shop.setAge(dto.getAge() == null ? 0 : dto.getAge());
+        shop.setIsDelete(0);
+        shop.setCreateTime(LocalDateTime.now());
+        shop.setUpdateTime(LocalDateTime.now());
+        return zxyShopRepository.insert(shop) > 0;
+    }
+
+    public boolean updateShopInfo(ZxyShopEntity zxyShop, ZxyShopSaveDto dto) {
+        boolean changed = false;
+        if (StringUtils.hasText(dto.getRealname()) && !Objects.equals(dto.getRealname(), zxyShop.getRealname())) {
+            zxyShop.setRealname(dto.getRealname());
+            changed = true;
+        }
+        if (StringUtils.hasText(dto.getAvatar()) && !Objects.equals(dto.getAvatar(), zxyShop.getAvatar())) {
+            zxyShop.setAvatar(dto.getAvatar());
+            changed = true;
+        }
+        if (dto.getGender() != null && dto.getGender() >= 0 && !Objects.equals(dto.getGender(), zxyShop.getGender())) {
+            zxyShop.setGender(dto.getGender());
+            changed = true;
+        }
+        if (dto.getAge() != null && dto.getAge() >= 0 && !Objects.equals(dto.getAge(), zxyShop.getAge())) {
+            zxyShop.setAge(dto.getAge());
+            changed = true;
+        }
+        if (!changed) {
+            return false;
+        }
+        zxyShop.setUpdateTime(LocalDateTime.now());
+        return zxyShopRepository.updateById(zxyShop) > 0;
+    }
+
+    public boolean deleteShopInfo(ZxyShopEntity zxyShop) {
+        zxyShop.setIsDelete(1);
+        zxyShop.setUpdateTime(LocalDateTime.now());
+        return zxyShopRepository.updateById(zxyShop) > 0;
     }
 
     public ZxyBaseInfoShopVo getBaseInfo(String phone, ZxyShopEntity zxyShop) {
@@ -122,5 +161,19 @@ public class ZxyShopModel {
         baseInfoVo.setAge(zxyShop.getAge());
         baseInfoVo.setCreateTime(zxyShop.getCreateTime());
         return baseInfoVo;
+    }
+
+    public List<ZxyBaseInfoShopVo> listShops() {
+        return zxyShopRepository.listValidShops().stream().map(shop -> {
+            ZxyBaseInfoShopVo vo = new ZxyBaseInfoShopVo();
+            UserEntity user = userRepository.selectById(shop.getSysId());
+            vo.setPhone(user == null ? "" : user.getUsername());
+            vo.setRealname(shop.getRealname());
+            vo.setAvatar(shop.getAvatar());
+            vo.setGender(shop.getGender());
+            vo.setAge(shop.getAge());
+            vo.setCreateTime(shop.getCreateTime());
+            return vo;
+        }).collect(Collectors.toList());
     }
 }

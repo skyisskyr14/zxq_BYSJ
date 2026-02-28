@@ -15,6 +15,7 @@ export default {
     { path: 'boarding/list', component: () => import('@/views/s/boarding/BoardingList.vue'), meta: { title: '寄养动态', role: ['merchant'] } },
     { path: 'boarding/log/:orderId', component: () => import('@/views/s/boarding/BoardingLog.vue'), meta: { title: '发布动态', role: ['merchant'] } },
     { path: 'store/profile', component: () => import('@/views/s/store/StoreProfile.vue'), meta: { title: '门店资料', role: ['merchant'] } },
+    { path: 'me/profile', component: () => import('@/views/s/me/ShopProfile.vue'), meta: { title: '商家信息', role: ['merchant'] } },
     { path: 'cage/list', component: () => import('@/views/s/resource/CageList.vue'), meta: { title: '笼位管理', role: ['merchant'] } },
     { path: 'room/list', component: () => import('@/views/s/resource/RoomList.vue'), meta: { title: '房型管理', role: ['merchant'] } },
     { path: 'service/list', component: () => import('@/views/s/resource/ServiceList.vue'), meta: { title: '服务管理', role: ['merchant'] } }

@@ -1,5 +1,6 @@
 ﻿import { login, getUserByRole } from '@/mock'
 import { getUserBaseInfoRequest } from '@/api/request/user'
+import { getShopBaseInfoRequest } from '@/api/request/shop'
 
 const STORAGE_KEY = 'pet-boarding-auth'
 
@@ -110,6 +111,20 @@ const actions = {
       ...(state.userInfo || {}),
       ...res.data,
       name: res.data.nickname || state.userInfo?.name || ''
+    }
+    commit('SET_USER_INFO', mergedUserInfo)
+    return mergedUserInfo
+  },
+  async fetchShopBaseInfo({ commit, state }) {
+    if (state.role !== 'merchant') return null
+    const res = await getShopBaseInfoRequest()
+    if (!res || res.code !== 200 || !res.data) {
+      throw new Error(res?.message || '获取商家基础信息失败')
+    }
+    const mergedUserInfo = {
+      ...(state.userInfo || {}),
+      ...res.data,
+      name: res.data.realname || state.userInfo?.name || ''
     }
     commit('SET_USER_INFO', mergedUserInfo)
     return mergedUserInfo
