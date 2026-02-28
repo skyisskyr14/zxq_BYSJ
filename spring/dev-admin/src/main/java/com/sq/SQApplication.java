@@ -1,5 +1,6 @@
 package com.sq;
 
+import org.mybatis.spring.annotation.MapperScan;
 //import com.skyissky.common.config.GlobalJacksonTimeConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
