@@ -54,8 +54,11 @@ public class UserAuthController {
 //    @Resource
 //    private RedisSubAccountTimerService redisSubAccountTimerService;
 
-    public UserAuthController(UserRepository userRepository, CaptchaDispatcher captchaDispatcher, UserToProjectRepository userToProjectRepository) {
-        this.model = new UserAuthModel(userRepository, captchaDispatcher,userToProjectRepository,userToRoleRepository);
+    public UserAuthController(UserRepository userRepository,
+                              CaptchaDispatcher captchaDispatcher,
+                              UserToProjectRepository userToProjectRepository,
+                              UserToRoleRepository userToRoleRepository) {
+        this.model = new UserAuthModel(userRepository, captchaDispatcher, userToProjectRepository, userToRoleRepository);
     }
 
     @PostConstruct

@@ -29,6 +29,13 @@
         </div>
         <div class="right">
           <span class="badge">{{ roleLabel }}</span>
+          <div v-if="role === 'user'" class="user-brief">
+            <el-avatar :size="32" :src="userAvatar" class="avatar" icon="el-icon-user-solid" />
+            <div class="meta">
+              <div class="nickname">{{ userNickname }}</div>
+              <div class="phone">{{ userPhone }}</div>
+            </div>
+          </div>
           <el-dropdown v-if="canSwitchRole" @command="handleSwitch">
             <span class="el-dropdown-link">切换身份<i class="el-icon-arrow-down el-icon--right"></i></span>
             <el-dropdown-menu slot="dropdown">
@@ -54,7 +61,7 @@ import { getMenusByRole, roleHomes } from '@/router/menus'
 export default {
   name: 'CLayout',
   computed: {
-    ...mapGetters('auth', ['role', 'superAdmin']),
+    ...mapGetters('auth', ['role', 'superAdmin', 'userInfo']),
     ...mapGetters('app', ['sidebarCollapsed']),
     collapsed() {
       return this.sidebarCollapsed
@@ -73,6 +80,20 @@ export default {
     },
     canSwitchRole() {
       return !!this.superAdmin
+    },
+    userNickname() {
+      return this.userInfo?.nickname || this.userInfo?.name || this.userInfo?.username || '未设置昵称'
+    },
+    userPhone() {
+      return this.userInfo?.phone || '未绑定手机号'
+    },
+    userAvatar() {
+      return this.userInfo?.avatar || ''
+    }
+  },
+  created() {
+    if (this.role === 'user' && (!this.userInfo?.phone || !this.userInfo?.nickname)) {
+      this.$store.dispatch('auth/fetchUserBaseInfo').catch(() => {})
     }
   },
   methods: {
@@ -109,5 +130,30 @@ export default {
   color: #ffffff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-</style>
 
+.user-brief {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.meta {
+  line-height: 1.2;
+  text-align: right;
+}
+
+.avatar {
+  background: #dbeafe;
+}
+
+.nickname {
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.phone {
+  font-size: 12px;
+  color: #6b7280;
+}
+</style>
