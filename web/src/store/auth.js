@@ -1,4 +1,6 @@
 ﻿import { login, getUserByRole } from '@/mock'
+import { getUserBaseInfoRequest } from '@/api/request/user'
+import { getShopBaseInfoRequest } from '@/api/request/shop'
 
 const STORAGE_KEY = 'pet-boarding-auth'
 
@@ -49,6 +51,17 @@ const mutations = {
       loginMessage: state.loginMessage
     })
   },
+  SET_USER_INFO(state, userInfo) {
+    state.userInfo = userInfo || null
+    setStored({
+      token: state.token,
+      role: state.role,
+      userInfo: state.userInfo,
+      permissions: state.permissions,
+      superAdmin: state.superAdmin,
+      loginMessage: state.loginMessage
+    })
+  },
   CLEAR_AUTH(state) {
     state.token = ''
     state.role = ''
@@ -87,6 +100,34 @@ const actions = {
       loginMessage: state.loginMessage
     })
     return user
+  },
+  async fetchUserBaseInfo({ commit, state }) {
+    if (state.role !== 'user') return null
+    const res = await getUserBaseInfoRequest()
+    if (!res || res.code !== 200 || !res.data) {
+      throw new Error(res?.message || '获取用户基础信息失败')
+    }
+    const mergedUserInfo = {
+      ...(state.userInfo || {}),
+      ...res.data,
+      name: res.data.nickname || state.userInfo?.name || ''
+    }
+    commit('SET_USER_INFO', mergedUserInfo)
+    return mergedUserInfo
+  },
+  async fetchShopBaseInfo({ commit, state }) {
+    if (state.role !== 'merchant') return null
+    const res = await getShopBaseInfoRequest()
+    if (!res || res.code !== 200 || !res.data) {
+      throw new Error(res?.message || '获取商家基础信息失败')
+    }
+    const mergedUserInfo = {
+      ...(state.userInfo || {}),
+      ...res.data,
+      name: res.data.realname || state.userInfo?.name || ''
+    }
+    commit('SET_USER_INFO', mergedUserInfo)
+    return mergedUserInfo
   }
 }
 
@@ -97,4 +138,3 @@ export default {
   mutations,
   actions
 }
-

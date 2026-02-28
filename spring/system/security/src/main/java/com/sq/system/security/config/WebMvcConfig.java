@@ -41,6 +41,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private String baseDir1;
     @Value("${app.pay.base-dir}")
     private String baseDir2;
+    @Value("${app.user.avatar.base-dir}")
+    private String baseDir3;
+    @Value("${app.shop.avatar.base-dir}")
+    private String baseDir4;
 
     @PostConstruct
     public void debugStaticDirs() {
@@ -49,16 +53,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
         System.out.println("recharge.baseDir= " + baseDir1);
         System.out.println("pay.baseDir2    = " + baseDir2);
         System.out.println("pay.location2   = " + Paths.get(baseDir2).toUri());
+        System.out.println("user.avatarDir  = " + baseDir3);
+        System.out.println("shop.avatarDir  = " + baseDir4);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String location = Paths.get(baseDir).toUri().toString();
+        String location = toDirLocation(baseDir);
         registry.addResourceHandler("/uploads/kf/**").addResourceLocations(location);
-        String location1 = Paths.get(baseDir1).toUri().toString();
+        String location1 = toDirLocation(baseDir1);
         registry.addResourceHandler("/uploads/recharge/**").addResourceLocations(location1);
-        String location2 = Paths.get(baseDir2).toUri().toString();
+        String location2 = toDirLocation(baseDir2);
         registry.addResourceHandler("/uploads/pay/**").addResourceLocations(location2);
+        String location3 = toDirLocation(baseDir3);
+        registry.addResourceHandler("/uploads/user/avatar/**").addResourceLocations(location3);
+        String location4 = toDirLocation(baseDir4);
+        registry.addResourceHandler("/uploads/shop/avatar/**").addResourceLocations(location4);
+    }
+
+    private String toDirLocation(String dir) {
+        String location = Paths.get(dir).toUri().toString();
+        return location.endsWith("/") ? location : location + "/";
     }
 
     @Override

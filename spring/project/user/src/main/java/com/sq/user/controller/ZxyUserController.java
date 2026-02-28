@@ -18,11 +18,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import com.sq.system.security.context.UserTokenContextHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Objects;
+import java.util.UUID;
 
 @RestController("ZxyUserController")
 @RequestMapping("/fd/user")
@@ -36,6 +46,12 @@ public class ZxyUserController {
     private UserIpAccessService userIpAccessService;
     @Autowired
     private ZxyUserRepository zxyUserRepository;
+
+    @Value("${app.user.avatar.base-dir}")
+    private String userAvatarBaseDir;
+
+    @Value("${app.user.avatar.public-host}")
+    private String userAvatarPublicHost;
 
     @PostConstruct
     public void init() {
@@ -84,22 +100,61 @@ public class ZxyUserController {
     @Operation(summary = "用户修改个人基础信息")
     public ResponseResult<?> update(@RequestParam(required = false) String nickname,
                                        @RequestParam(required = false) String avatar,
-                                       @RequestParam(required = false) int gender) {
+                                       @RequestParam(required = false) Integer gender) {
         UserEntity userEntity = UserTokenContextHolder.get();
         ZxyUserEntity zxyUserEntity = zxyUserRepository.getUserBySysId(userEntity.getId());
 
-
-        if(nickname == null || nickname.isEmpty() || Objects.equals(userEntity.getNickname(), nickname)
-        || avatar == null || avatar.isEmpty() || Objects.equals(zxyUserEntity.getAvatar(), avatar)
-        || gender == -1 || zxyUserEntity.getGender() == gender) {
-            return ResponseResult.fail("没有必要修改，因为一样~");
+        if (zxyUserEntity == null) {
+            return ResponseResult.fail("用户不存在");
         }
 
-        if(userModel.update(zxyUserEntity,nickname,avatar,gender)){
+        if (userModel.updateBaseInfo(zxyUserEntity, nickname, avatar, gender)) {
             return ResponseResult.success("修改成功");
-        }else{
-            return ResponseResult.success("修改失败");
         }
+        return ResponseResult.fail("没有必要修改，因为一样~");
+    }
+
+    @PostMapping(value = "/avatar/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @UserLog(action = "用户上传头像", module = "user")
+    @Operation(summary = "用户上传头像")
+    public ResponseResult<?> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return ResponseResult.fail("请选择头像文件");
+        }
+
+        String contentType = file.getContentType();
+        if (!StringUtils.hasText(contentType) || !contentType.startsWith("image/")) {
+            return ResponseResult.fail("仅支持图片文件");
+        }
+
+        UserEntity user = UserTokenContextHolder.get();
+        ZxyUserEntity zxyUserEntity = zxyUserRepository.getUserBySysId(user.getId());
+        if (zxyUserEntity == null) {
+            return ResponseResult.fail("用户不存在");
+        }
+
+        String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        Path dir = Paths.get(userAvatarBaseDir, String.valueOf(user.getId()), datePath);
+        Files.createDirectories(dir);
+
+        String ext = "";
+        String originalName = file.getOriginalFilename();
+        if (StringUtils.hasText(originalName) && originalName.contains(".")) {
+            ext = originalName.substring(originalName.lastIndexOf('.'));
+        }
+
+        String filename = "avatar_" + UUID.randomUUID().toString().replace("-", "") + ext;
+        Path dest = dir.resolve(filename);
+        file.transferTo(dest);
+
+        String relative = String.join("/", String.valueOf(user.getId()), datePath, filename).replace("\\", "/");
+        String avatarUrl = userAvatarPublicHost.replaceAll("/$", "") + "/" + relative;
+
+        zxyUserEntity.setAvatar(avatarUrl);
+        zxyUserEntity.setUpdateTime(LocalDateTime.now());
+        zxyUserRepository.updateById(zxyUserEntity);
+
+        return ResponseResult.success(Map.of("avatar", avatarUrl));
     }
 
 //    @PostMapping("/delete")

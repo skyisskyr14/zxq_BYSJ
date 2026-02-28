@@ -81,6 +81,11 @@
             <artifactId>shop</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.sq</groupId>
+            <artifactId>pet</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
         <!-- ✅ Web（包含 spring-boot-starter，不要再重复写 starter） -->
         <dependency>

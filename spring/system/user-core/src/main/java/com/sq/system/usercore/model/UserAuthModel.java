@@ -78,15 +78,22 @@ public class UserAuthModel {
             vo.setStatus("用户名不存在");
             return vo;
         }else{
-//            System.out.println(user.getId());
-            if(Objects.equals(userToProjectRepository.selectOne(
+            UserToProjectEntity userProject = userToProjectRepository.selectOne(
                     Wrappers.lambdaQuery(UserToProjectEntity.class)
-                            .eq(UserToProjectEntity::getUserId,user.getId())
-            ).getProjectId(), dto.getType())
-            || Objects.equals(userToRoleRepository.selectOne(
+                            .eq(UserToProjectEntity::getUserId, user.getId())
+            );
+            UserToRoleEntity userRole = userToRoleRepository.selectOne(
                     Wrappers.lambdaQuery(UserToRoleEntity.class)
-                            .eq(UserToRoleEntity::getUserId,user.getId())
-            ).getRoleId(), dto.getRole())){
+                            .eq(UserToRoleEntity::getUserId, user.getId())
+            );
+
+            if (userProject == null || userRole == null) {
+                vo.setStatus("用户不存在");
+                return vo;
+            }
+
+            if (Objects.equals(userProject.getProjectId(), dto.getType())
+                    && Objects.equals(userRole.getRoleId(), dto.getRole())) {
                 vo.setUser(user);
             }else{
                 vo.setStatus("用户不存在");
@@ -122,4 +129,3 @@ public class UserAuthModel {
         return vo;
     }
 }
-
