@@ -83,7 +83,7 @@ public class UserAuthModel {
                     Wrappers.lambdaQuery(UserToProjectEntity.class)
                             .eq(UserToProjectEntity::getUserId,user.getId())
             ).getProjectId(), dto.getType())
-            || Objects.equals(userToRoleRepository.selectOne(
+            && Objects.equals(userToRoleRepository.selectOne(
                     Wrappers.lambdaQuery(UserToRoleEntity.class)
                             .eq(UserToRoleEntity::getUserId,user.getId())
             ).getRoleId(), dto.getRole())){
