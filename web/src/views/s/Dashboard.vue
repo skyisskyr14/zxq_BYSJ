@@ -1,6 +1,13 @@
 ﻿<template>
   <div>
     <page-header title="商家仪表盘" desc="门店经营数据概览" />
+    <div class="card mt-16 merchant-card">
+      <el-avatar :size="56" :src="merchant.avatar" icon="el-icon-user-solid" />
+      <div>
+        <div class="name">{{ merchant.realname || merchant.name || '未设置商家名称' }}</div>
+        <div class="text-muted">手机号：{{ merchant.phone || '未绑定' }}</div>
+      </div>
+    </div>
     <div class="grid mt-16">
       <el-card class="stat">
         <div class="label">待处理预约</div>
@@ -25,6 +32,7 @@
         <el-button @click="$router.push('/s/booking/list')">预约管理</el-button>
         <el-button @click="$router.push('/s/checkin')">入住办理</el-button>
         <el-button @click="$router.push('/s/boarding/list')">寄养动态</el-button>
+        <el-button @click="$router.push('/s/me/profile')">商家信息</el-button>
       </div>
     </div>
   </div>
@@ -41,6 +49,9 @@ export default {
     return { bookings: [], orders: [], refunds: [] }
   },
   computed: {
+    merchant() {
+      return this.$store.getters['auth/userInfo'] || {}
+    },
     pendingBookings() {
       return this.bookings.filter(b => b.status === 'pending').length
     },
@@ -58,11 +69,23 @@ export default {
     this.bookings = list('bookings')
     this.orders = list('orders')
     this.refunds = list('refunds')
+    this.$store.dispatch('auth/fetchShopBaseInfo').catch(() => {})
   }
 }
 </script>
 
 <style scoped>
+.merchant-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -85,4 +108,3 @@ export default {
   gap: 12px;
 }
 </style>
-
