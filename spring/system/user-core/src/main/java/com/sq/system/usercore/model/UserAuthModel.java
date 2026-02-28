@@ -69,6 +69,28 @@ public class UserAuthModel {
         if (user == null) {
             vo.setStatus("用户名不存在");
             return vo;
+        }else{
+            UserToProjectEntity userProject = userToProjectRepository.selectOne(
+                    Wrappers.lambdaQuery(UserToProjectEntity.class)
+                            .eq(UserToProjectEntity::getUserId, user.getId())
+            );
+            UserToRoleEntity userRole = userToRoleRepository.selectOne(
+                    Wrappers.lambdaQuery(UserToRoleEntity.class)
+                            .eq(UserToRoleEntity::getUserId, user.getId())
+            );
+
+            if (userProject == null || userRole == null) {
+                vo.setStatus("用户不存在");
+                return vo;
+            }
+
+            if (Objects.equals(userProject.getProjectId(), dto.getType())
+                    && Objects.equals(userRole.getRoleId(), dto.getRole())) {
+                vo.setUser(user);
+            }else{
+                vo.setStatus("用户不存在");
+                return vo;
+            }
         }
 
         // 3) 校验项目 / 角色（修复：selectOne 可能为 null，避免 .getXxx() 直接 NPE）
