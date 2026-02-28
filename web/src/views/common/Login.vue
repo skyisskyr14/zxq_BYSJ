@@ -161,6 +161,22 @@ export default {
           loginMessage: adminFlagSource
         })
 
+        if (role === 'user') {
+          try {
+            await this.$store.dispatch('auth/fetchUserBaseInfo')
+          } catch (err) {
+            this.$message.warning(err.message || '已登录，但获取个人基础信息失败')
+          }
+        }
+
+        if (role === 'merchant') {
+          try {
+            await this.$store.dispatch('auth/fetchShopBaseInfo')
+          } catch (err) {
+            this.$message.warning(err.message || '已登录，但获取商家基础信息失败')
+          }
+        }
+
         this.$message.success('登录成功')
         await this.$router.replace(roleHomes[role] || '/login')
       } catch (e) {
