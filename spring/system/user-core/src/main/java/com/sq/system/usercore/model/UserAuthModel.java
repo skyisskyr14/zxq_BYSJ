@@ -13,12 +13,14 @@ import com.sq.system.usercore.repository.UserToProjectRepository;
 import com.sq.system.usercore.repository.UserToRoleRepository;
 import com.sq.system.usercore.vo.UserLoginVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Component
 @RequiredArgsConstructor
 public class UserAuthModel {
 
@@ -27,52 +29,42 @@ public class UserAuthModel {
     private final UserToProjectRepository userToProjectRepository;
     private final UserToRoleRepository userToRoleRepository;
 
-//    public UserAuthModel(UserRepository userRepository,
-//                           CaptchaDispatcher captchaDispatcher,
-//                           UserToProjectRepository userToProjectRepository) {
-//        this.userRepository = userRepository;
-//        this.captchaDispatcher = captchaDispatcher;
-//        this.userToProjectRepository = userToProjectRepository;
-//    }
+    public String register(UserRegisterDTO dto, long projectId) {
+        // 1) 验证码（你暂时注释掉了，这里保持你的逻辑）
+        // boolean valid = captchaDispatcher.get("default").verify(dto.getCaptchaUuid(), dto.getCaptchaInput());
+        // if (!valid) return "验证码错误";
 
-
-    public String register(UserRegisterDTO dto,long projectId) {
-//        boolean valid = captchaDispatcher.get("default").verify(dto.getCaptchaUuid(), dto.getCaptchaInput());
-//
-//        if (!valid) {
-//            return "验证码错误";
-//        }
-
+        // 2) 用户名是否存在
         if (userCoreRepository.findByUsername(dto.getUsername()) != null) {
             return "用户名已存在";
         }
 
+        // 3) 组装并写入用户
         UserEntity user = new UserEntity();
         user.setUsername(dto.getUsername());
         user.setPassword(dto.getPassword());
         user.setSecurePassword(dto.getSecurePassword());
-//        user.setProjectId(1L);
-//        user.setRoleId(3);
         user.setStatus(1);
         user.setEmail(dto.getEmail());
-//        user.setProjectId(projectId); // 自动注入项目
         user.setCreateTime(LocalDateTime.now());
 
         userCoreRepository.insert(user);
         return "注册成功";
     }
 
-    public UserLoginVO login(UserLoginDTO dto,String ip) {
+    public UserLoginVO login(UserLoginDTO dto, String ip) {
         UserLoginVO vo = new UserLoginVO();
-        // 1. 验证验证码（必须先验证）
-//       System.out.println(dto);
-        boolean valid = captchaDispatcher.get(dto.getCaptchaType()).verify(dto.getCaptchaUuid(), dto.getCaptchaInput());
+
+        // 1) 验证码校验
+        boolean valid = captchaDispatcher.get(dto.getCaptchaType())
+                .verify(dto.getCaptchaUuid(), dto.getCaptchaInput());
+
         if (!valid) {
             vo.setStatus("验证码错误");
             return vo;
         }
 
-        // 2. 查询用户是否存在
+        // 2) 查询用户
         UserEntity user = userCoreRepository.findByUsername(dto.getUsername());
         if (user == null) {
             vo.setStatus("用户名不存在");
@@ -101,21 +93,49 @@ public class UserAuthModel {
             }
         }
 
+        // 3) 校验项目 / 角色（修复：selectOne 可能为 null，避免 .getXxx() 直接 NPE）
+        UserToProjectEntity userToProject = userToProjectRepository.selectOne(
+                Wrappers.lambdaQuery(UserToProjectEntity.class)
+                        .eq(UserToProjectEntity::getUserId, user.getId())
+                        .last("limit 1")
+        );
 
+        UserToRoleEntity userToRole = userToRoleRepository.selectOne(
+                Wrappers.lambdaQuery(UserToRoleEntity.class)
+                        .eq(UserToRoleEntity::getUserId, user.getId())
+                        .last("limit 1")
+        );
+
+        // 任何一条绑定关系不存在，都视为“用户不存在/不匹配”
+        if (userToProject == null || userToRole == null) {
+            vo.setStatus("用户不存在");
+            return vo;
+        }
+
+        // dto.getType() 你这里是 projectId / projectType 的含义，我保持原逻辑不动
+        if (!Objects.equals(userToProject.getProjectId(), dto.getType())
+                || !Objects.equals(userToRole.getRoleId(), dto.getRole())) {
+            vo.setStatus("用户不存在");
+            return vo;
+        }
+
+        // 4) 密码校验
         if (!Objects.equals(dto.getPassword(), user.getPassword())) {
             vo.setStatus("密码错误");
             return vo;
         }
 
-        if(user.getStatus() == 0){
+        // 5) 状态校验
+        if (user.getStatus() == 0) {
             vo.setStatus("用户因违规操作已被封禁");
             return vo;
         }
 
+        // 6) 更新 IP
         user.setNowIp(ip);
         userCoreRepository.updateById(user);
 
-        // 3. 生成 Token
+        // 7) 生成 Token
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
         claims.put("username", user.getUsername());
@@ -123,7 +143,8 @@ public class UserAuthModel {
 
         String token = JwtUtil.generateToken(claims);
 
-        // 4. 构造响应对象
+        // 8) 返回 VO
+        vo.setUser(user);
         vo.setStatus("登录成功");
         vo.setToken(token);
         return vo;
