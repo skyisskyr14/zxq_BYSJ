@@ -30,8 +30,11 @@
         <div class="right">
           <span class="badge">{{ roleLabel }}</span>
           <div v-if="role === 'user'" class="user-brief">
-            <div class="nickname">{{ userNickname }}</div>
-            <div class="phone">{{ userPhone }}</div>
+            <el-avatar :size="32" :src="userAvatar" class="avatar" icon="el-icon-user-solid" />
+            <div class="meta">
+              <div class="nickname">{{ userNickname }}</div>
+              <div class="phone">{{ userPhone }}</div>
+            </div>
           </div>
           <el-dropdown v-if="canSwitchRole" @command="handleSwitch">
             <span class="el-dropdown-link">切换身份<i class="el-icon-arrow-down el-icon--right"></i></span>
@@ -83,6 +86,9 @@ export default {
     },
     userPhone() {
       return this.userInfo?.phone || '未绑定手机号'
+    },
+    userAvatar() {
+      return this.userInfo?.avatar || ''
     }
   },
   created() {
@@ -126,9 +132,19 @@ export default {
 }
 
 .user-brief {
-  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-right: 8px;
+}
+
+.meta {
+  line-height: 1.2;
   text-align: right;
+}
+
+.avatar {
+  background: #dbeafe;
 }
 
 .nickname {
