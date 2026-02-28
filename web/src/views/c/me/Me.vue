@@ -3,9 +3,9 @@
     <page-header title="个人中心" desc="管理个人信息与常用入口" />
     <div class="card mt-16">
       <div class="profile">
-        <div class="avatar">{{ user.name ? user.name.slice(0, 1) : 'U' }}</div>
+        <div class="avatar">{{ displayName ? displayName.slice(0, 1) : 'U' }}</div>
         <div>
-          <div class="name">{{ user.name || '用户' }}</div>
+          <div class="name">{{ displayName || '用户' }}</div>
           <div class="text-muted">{{ user.phone }}</div>
         </div>
       </div>
@@ -26,7 +26,13 @@ export default {
   computed: {
     user() {
       return this.$store.getters['auth/userInfo'] || {}
+    },
+    displayName() {
+      return this.user.nickname || this.user.name || this.user.username || ''
     }
+  },
+  created() {
+    this.$store.dispatch('auth/fetchUserBaseInfo').catch(() => {})
   }
 }
 </script>
